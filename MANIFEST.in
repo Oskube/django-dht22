@@ -1,0 +1,4 @@
+include LICENSE
+include README.rst
+recursive-include dht22/templates *
+recursive-include dht22/management *

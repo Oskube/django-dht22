@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Temperature and humidity chart</title>
+</head>
+<body>
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+<div id="latest"></div>
+<div id="data"></div>
+<div id="updated"></div>
+<form name="timeselect" onsubmit="getData(); showLatest(); return false;">
+    From <input type="text" name="from" title="dd/mm/yyyy" pattern="\d{1,2}/\d{1,2}/\d{4}" placeholder="dd/mm/yyyy" />
+    To <input type="text" name="to" title="dd/mm/yyyy" pattern="\d{1,2}/\d{1,2}/\d{4}" placeholder="dd/mm/yyyy" />
+    <input type="submit" />
+</form>
+
+<script>
+window.onload = showLatest();
+google.charts.load('current', {packages: ['corechart', 'line']});
+google.charts.setOnLoadCallback(getData);
+var options = {
+    title: 'Relative humidity and temperature',
+    width: 1000,
+    height: 400,
+    curveType: 'function',
+    series: {
+        0: {targetAxisIndex: 0},
+        1: {targetAxisIndex: 1}
+    },
+    vAxes: {
+        0: {title: 'Humidity (RH%)'},
+        1: {title: 'Temperature (Celsius)'}
+    },
+    hAxis: {
+        title:'Time',
+        //gridlines: {color: '#333', count: 4}
+    },
+    selectionMode: 'multiple',
+    crosshair: {trigger: 'both', orientation: 'both'},
+    explorer: {}
+}
+function updateChart(req) {
+    if(req.readyState === XMLHttpRequest.DONE) {
+        if(req.status === 200) {
+            var data = new google.visualization.DataTable(req.responseText);
+            var chart = new google.visualization.LineChart(document.getElementById('data'));
+            chart.draw(data, options);
+
+            updateTime();
+        } else {
+            document.getElementById('data').innerHTML = '<b>Error: Could not retrieve chart data</b>'
+        }
+    }
+}
+    
+function getData() {
+    var req = new XMLHttpRequest();
+    req.onreadystatechange = function() {
+        updateChart(req);
+    }
+    
+    var from = document.forms["timeselect"]["from"].value;
+    var to = document.forms["timeselect"]["to"].value;
+    var url = './latest';
+    if(from != null && from != '' && to != null && to != '')
+    {
+        url = "./from/" + from + "/to/" + to;
+    }
+    req.open('GET', url, true);
+    req.send();
+}
+
+//  Display latest temp & hum
+function showLatest() {
+    var req = new XMLHttpRequest();
+    req.onreadystatechange = function() {
+        if(req.readyState === XMLHttpRequest.DONE && req.status === 200) {
+            var latest = JSON.parse(req.responseText);
+            document.getElementById('latest').innerHTML = "Humidity: " + latest.humidity + "<br />Temperature: " + latest.temperature;
+        }
+    }
+    req.open("GET", "./current", true);
+    req.send();  
+}
+
+function updateTime() {
+        var time = new Date();
+        document.getElementById('updated').innerHTML = "Last updated: " + time.getDate() + "." + (time.getMonth()+1) + "." + time.getFullYear() + ", " + time.getHours() + ":" + time.getMinutes() + ":" + time.getSeconds();
+}
+</script>
+</body>
+</html>

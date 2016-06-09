@@ -1,0 +1,11 @@
+{
+    "cols": [
+        {"id":"","label":"Time","pattern":"","type":"date"},
+        {"id":"","label":"Humidity","pattern":"","type":"number"},
+        {"id":"","label":"Temperature","pattern":"","type":"number"}
+    ],
+    "rows": [
+{% for record in data reversed %}        {"c":[{"v":"Date({{record.time|date:"U"}}000)","f":null},{"v":{{record.humidity}},"f":null},{"v":"{{record.temperature}}","f":null}]},
+{% endfor %}
+    ]
+}
